@@ -361,12 +361,32 @@ body {
 </div>
 
 <script>
+// 条件設定をブラウザに保存・復元
+const CONFIG_KEYS = ['hourly', 'staffCost', 'targetRate'];
+
+function saveConfig() {
+  CONFIG_KEYS.forEach(id => {
+    localStorage.setItem('jk_' + id, document.getElementById(id).value);
+  });
+}
+
+function loadConfig() {
+  CONFIG_KEYS.forEach(id => {
+    const saved = localStorage.getItem('jk_' + id);
+    if (saved !== null && saved !== '') {
+      document.getElementById(id).value = saved;
+    }
+  });
+}
+
 function num(id) {
   const v = document.getElementById(id).value.replace(/[^\d.]/g, '');
   return v === '' ? NaN : parseFloat(v);
 }
 
 function calc() {
+  // 条件設定が変わったら保存
+  saveConfig();
   const hourly = num('hourly');
   const staffCost = num('staffCost');
   const targetRate = num('targetRate');
@@ -427,6 +447,8 @@ function reset() {
   for (let i = 0; i <= 5; i++) document.getElementById('sim' + i).textContent = '—';
 }
 
+// 起動時：保存された条件設定を復元してから計算
+loadConfig();
 calc();
 </script>
 </body>
