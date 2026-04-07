@@ -361,22 +361,49 @@ body {
 </div>
 
 <script>
-// 条件設定をブラウザに保存・復元
+// 条件設定をブラウザに保存・復元（localStorage + cookie 二重保存）
 const CONFIG_KEYS = ['hourly', 'staffCost', 'targetRate'];
 
 function saveConfig() {
+  const data = {};
   CONFIG_KEYS.forEach(id => {
-    localStorage.setItem('jk_' + id, document.getElementById(id).value);
+    const v = document.getElementById(id).value;
+    data[id] = v;
+    try { localStorage.setItem('jk_' + id, v); } catch(e) {}
   });
+  // cookieにも保存（365日有効）
+  try {
+    const exp = new Date(Date.now() + 365*24*60*60*1000).toUTCString();
+    document.cookie = 'jk_config=' + encodeURIComponent(JSON.stringify(data)) + ';expires=' + exp + ';path=/;SameSite=Lax';
+  } catch(e) {}
 }
 
 function loadConfig() {
+  let loaded = false;
+  // まずlocalStorageから
   CONFIG_KEYS.forEach(id => {
-    const saved = localStorage.getItem('jk_' + id);
-    if (saved !== null && saved !== '') {
-      document.getElementById(id).value = saved;
-    }
+    try {
+      const saved = localStorage.getItem('jk_' + id);
+      if (saved !== null && saved !== '') {
+        document.getElementById(id).value = saved;
+        loaded = true;
+      }
+    } catch(e) {}
   });
+  // localStorageになければcookieから
+  if (!loaded) {
+    try {
+      const match = document.cookie.match(/jk_config=([^;]+)/);
+      if (match) {
+        const data = JSON.parse(decodeURIComponent(match[1]));
+        CONFIG_KEYS.forEach(id => {
+          if (data[id] !== undefined && data[id] !== '') {
+            document.getElementById(id).value = data[id];
+          }
+        });
+      }
+    } catch(e) {}
+  }
 }
 
 function num(id) {
