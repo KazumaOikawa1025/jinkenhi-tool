@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人件費カット判断ツール</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;900&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: #f4f4f4;
+  min-height: 100vh;
+  padding: 16px 12px;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+/* ===== Header ===== */
+.header {
+  background: #1a237e;
+  padding: 20px 24px 16px;
+  text-align: center;
+}
+.header h1 { color: #fff; font-size: 22px; font-weight: 700; letter-spacing: 2px; }
+.header .sub { color: #90caf9; font-size: 12px; margin-top: 6px; }
+
+.body-inner { padding: 20px; }
+
+/* ===== Section ===== */
+.section { margin-bottom: 16px; }
+.section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+
+/* ===== Input area ===== */
+.input-card {
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 4px 0;
+}
+.input-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+}
+.input-row + .input-row { border-top: 1px solid #eee; }
+.input-row .ilabel {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+.input-row .ilabel .hint { display: block; font-size: 10px; color: #aaa; font-weight: 400; margin-top: 2px; }
+.input-row .ifield {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.input-row input[type="text"] {
+  width: 90px;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  border: none;
+  border-bottom: 3px solid #1a237e;
+  background: transparent;
+  padding: 4px 0;
+  color: #1a237e;
+  outline: none;
+}
+.input-row input[type="text"]::placeholder { color: #ccc; font-size: 20px; font-weight: 400; }
+.input-row input[type="text"]:focus { border-bottom-color: #e53935; }
+.input-row .iunit { font-size: 14px; font-weight: 600; color: #666; }
+
+/* ===== Divider ===== */
+.divider { height: 1px; background: #eee; margin: 20px 0; }
+
+/* ===== Result ===== */
+.result-area {
+  display: flex;
+  gap: 16px;
+}
+.result-left { flex: 1; min-width: 0; }
+.result-right { width: 240px; flex-shrink: 0; }
+
+/* ===== Conclusion card ===== */
+.conclusion-card {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid #e0e0e0;
+  transition: border-color 0.3s;
+}
+.conclusion-card.state-ok { border-color: #4caf50; }
+.conclusion-card.state-over { border-color: #e53935; }
+
+.conclusion-top {
+  display: flex;
+  align-items: stretch;
+}
+.conclusion-tag {
+  background: #333;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  letter-spacing: 2px;
+}
+.conclusion-badge {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 900;
+  padding: 8px;
+  letter-spacing: 3px;
+  background: #fafafa;
+  color: #bbb;
+}
+.state-ok .conclusion-badge { background: #e8f5e9; color: #2e7d32; }
+.state-over .conclusion-badge { background: #ffebee; color: #c62828; }
+
+.big-result {
+  padding: 22px 16px;
+  text-align: center;
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+  border-top: 1px solid #eee;
+}
+.state-ok .big-result { background: #f1f8e9; }
+.state-over .big-result { background: #fce4ec; }
+
+.big-text { font-weight: 900; line-height: 1.5; }
+.big-text.ok { font-size: 24px; color: #1b5e20; }
+.big-text.over { font-size: 22px; color: #b71c1c; }
+.empty-msg { color: #ccc; font-size: 13px; }
+
+/* ===== Detail rows ===== */
+.detail-rows { border-top: 1px solid #eee; }
+.detail-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-row .dlabel { flex: 1; font-size: 11px; color: #777; line-height: 1.4; }
+.detail-row .dval { font-size: 20px; font-weight: 700; color: #333; min-width: 90px; text-align: right; }
+
+/* ===== Simulation ===== */
+.sim-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.sim-title {
+  background: #f5f5f5;
+  text-align: center;
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #555;
+  letter-spacing: 1px;
+  border-bottom: 1px solid #e0e0e0;
+}
+.sim-table { width: 100%; border-collapse: collapse; }
+.sim-table th {
+  font-size: 10px;
+  font-weight: 600;
+  color: #999;
+  padding: 6px;
+  text-align: center;
+  background: #fafafa;
+  border-bottom: 1px solid #e0e0e0;
+}
+.sim-table td {
+  padding: 7px 8px;
+  font-size: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.sim-table td:first-child { color: #555; }
+.sim-table td:last-child { text-align: right; font-weight: 700; color: #333; font-size: 13px; }
+.sim-table tr:last-child td { border-bottom: none; }
+.sim-green td { background: #f1f8e9; }
+.sim-target td { background: #e3f2fd; }
+.sim-target td:last-child { color: #c62828; font-weight: 700; }
+
+/* ===== Config (条件設定) ===== */
+.config-grid {
+  display: flex;
+  gap: 8px;
+}
+.config-item {
+  flex: 1;
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.config-item .clabel { font-size: 11px; color: #888; margin-bottom: 4px; }
+.config-item input {
+  width: 80px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-bottom: 2px solid #ccc;
+  background: transparent;
+  padding: 2px 0;
+  color: #333;
+  outline: none;
+}
+.config-item input:focus { border-bottom-color: #1a237e; }
+.config-item .cunit { font-size: 12px; color: #888; margin-left: 2px; }
+
+/* ===== Responsive ===== */
+@media (max-width: 680px) {
+  .result-area { flex-direction: column; }
+  .result-right { width: 100%; }
+  .config-grid { flex-direction: column; }
+  body { padding: 8px; }
+  .body-inner { padding: 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h1>人件費カット判断ツール</h1>
+    <div class="sub">3つ入力するだけ → 使える時間が出る</div>
+  </div>
+
+  <div class="body-inner">
+
+    <!-- ① 数値入力（一番上） -->
+    <div class="section">
+      <div class="section-label">数値入力</div>
+      <div class="input-card">
+        <div class="input-row">
+          <span class="ilabel">① 今日のバイト合計時間数<span class="hint">21:00〜21:30時点での使用時間</span></span>
+          <div class="ifield">
+            <input type="text" id="partHours" placeholder="—" inputmode="decimal" oninput="calc()">
+            <span class="iunit">時間</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <span class="ilabel">② 今日の社員人数</span>
+          <div class="ifield">
+            <input type="text" id="staffCount" placeholder="—" inputmode="numeric" oninput="calc()">
+            <span class="iunit">人</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <span class="ilabel">③ 今日の売上予測<span class="hint">21:00〜21:30時点での予測</span></span>
+          <div class="ifield">
+            <input type="text" id="salesForecast" placeholder="—" inputmode="decimal" oninput="calc()">
+            <span class="iunit">万円</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ② 結論（真ん中） -->
+    <div class="section">
+      <div class="result-area">
+        <div class="result-left">
+          <div class="conclusion-card" id="conclusionCard">
+            <div class="conclusion-top">
+              <div class="conclusion-tag">結論</div>
+              <div class="conclusion-badge" id="conclusionBadge">—</div>
+            </div>
+            <div class="big-result" id="bigResult">
+              <span class="empty-msg">↑ 数字を入力してください</span>
+            </div>
+            <div class="detail-rows">
+              <div class="detail-row">
+                <span class="dlabel">+の場合：使える時間<br>−の場合：カットする時間</span>
+                <span class="dval" id="diffVal">—</span>
+              </div>
+              <div class="detail-row">
+                <span class="dlabel">1日の使用可能時間数</span>
+                <span class="dval" id="availVal">—</span>
+              </div>
+              <div class="detail-row">
+                <span class="dlabel">今のシフト（入力した時間数）</span>
+                <span class="dval" id="shiftVal">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-right">
+          <div class="sim-card">
+            <div class="sim-title">シミュレーション</div>
+            <table class="sim-table">
+              <thead><tr><th>バイト時間数</th><th>人件費率</th></tr></thead>
+              <tbody>
+                <tr class="sim-green"><td>使える時間ちょうど</td><td id="sim0">—</td></tr>
+                <tr><td>今のシフトのまま</td><td id="sim1">—</td></tr>
+                <tr><td>今から2h減らす</td><td id="sim2">—</td></tr>
+                <tr><td>今から4h減らす</td><td id="sim3">—</td></tr>
+                <tr><td>今から6h減らす</td><td id="sim4">—</td></tr>
+                <tr><td>今から8h減らす</td><td id="sim5">—</td></tr>
+              </tbody>
+              <tfoot>
+                <tr class="sim-target"><td>目標ライン</td><td id="simTarget">—</td></tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ③ 条件設定（一番下） -->
+    <div class="section">
+      <div class="section-label">条件設定</div>
+      <div class="config-grid">
+        <div class="config-item">
+          <div class="clabel">バイト平均時給</div>
+          <input type="text" id="hourly" value="1300" inputmode="numeric" oninput="calc()"><span class="cunit">円</span>
+        </div>
+        <div class="config-item">
+          <div class="clabel">社員1日コスト</div>
+          <input type="text" id="staffCost" value="14000" inputmode="numeric" oninput="calc()"><span class="cunit">円</span>
+        </div>
+        <div class="config-item">
+          <div class="clabel">目標人件費率</div>
+          <input type="text" id="targetRate" value="22" inputmode="decimal" oninput="calc()"><span class="cunit">%</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function num(id) {
+  const v = document.getElementById(id).value.replace(/[^\d.]/g, '');
+  return v === '' ? NaN : parseFloat(v);
+}
+
+function calc() {
+  const hourly = num('hourly');
+  const staffCost = num('staffCost');
+  const targetRate = num('targetRate');
+  const partHours = num('partHours');
+  const staffCount = num('staffCount');
+  const sales = num('salesForecast');
+
+  document.getElementById('simTarget').textContent = isNaN(targetRate) ? '—' : targetRate.toFixed(1) + '%';
+
+  if ([partHours, staffCount, sales, hourly, staffCost, targetRate].some(isNaN) || sales === 0 || hourly === 0) {
+    reset(); return;
+  }
+
+  const budget = sales * (targetRate / 100) * 10000;
+  const sCost = staffCount * staffCost;
+  const avail = (budget - sCost) / hourly;
+  const diff = avail - partHours;
+  const rate = (partHours * hourly + sCost) / (sales * 10000);
+  const ok = diff >= 0;
+
+  const card = document.getElementById('conclusionCard');
+  card.className = 'conclusion-card ' + (ok ? 'state-ok' : 'state-over');
+
+  const badge = document.getElementById('conclusionBadge');
+  badge.textContent = ok ? '達成' : 'オーバー';
+
+  const big = document.getElementById('bigResult');
+  if (ok) {
+    big.innerHTML = '<span class="big-text ok">人件費率 ' + (rate * 100).toFixed(1) + '%<br>（目標内）</span>';
+  } else {
+    big.innerHTML = '<span class="big-text over">バイト ' + Math.abs(diff).toFixed(1) + ' 時間減らす<br>（今のままだと' + (rate * 100).toFixed(1) + '%）</span>';
+  }
+
+  const dEl = document.getElementById('diffVal');
+  dEl.textContent = (diff >= 0 ? '+' : '') + diff.toFixed(1) + 'h';
+  dEl.style.color = diff >= 0 ? '#2e7d32' : '#c62828';
+
+  document.getElementById('availVal').textContent = '+' + avail.toFixed(1) + 'h';
+  document.getElementById('shiftVal').textContent = '+' + partHours.toFixed(1) + 'h';
+
+  const sr = (h) => ((Math.max(h, 0) * hourly + sCost) / (sales * 10000) * 100).toFixed(1) + '%';
+  document.getElementById('sim0').textContent = sr(avail);
+  document.getElementById('sim1').textContent = sr(partHours);
+  document.getElementById('sim2').textContent = sr(partHours - 2);
+  document.getElementById('sim3').textContent = sr(partHours - 4);
+  document.getElementById('sim4').textContent = sr(partHours - 6);
+  document.getElementById('sim5').textContent = sr(partHours - 8);
+}
+
+function reset() {
+  document.getElementById('conclusionCard').className = 'conclusion-card';
+  document.getElementById('conclusionBadge').textContent = '—';
+  document.getElementById('bigResult').innerHTML = '<span class="empty-msg">↑ 数字を入力してください</span>';
+  document.getElementById('diffVal').textContent = '—';
+  document.getElementById('diffVal').style.color = '';
+  document.getElementById('availVal').textContent = '—';
+  document.getElementById('shiftVal').textContent = '—';
+  for (let i = 0; i <= 5; i++) document.getElementById('sim' + i).textContent = '—';
+}
+
+calc();
+</script>
+</body>
+</html>
